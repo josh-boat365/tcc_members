@@ -24,11 +24,14 @@ class CreateMemberRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:225'],
             'last_name' => ['nullable', 'string', 'max:225'],
-            'contact_1' => ['nullable', 'string', 'max:225', 'regex:/^\+\d{6,15}$/'],
-            'contact_2' => ['nullable', 'string', 'max:225', 'regex:/^\+\d{6,15}$/'],
+            'gender' => ['nullable', 'string' ],
+            'contact_1' => ['nullable', 'string', 'max:16', 'regex:/^\+\d{6,15}$/'],
+            'contact_2' => ['nullable', 'string', 'max:16', 'regex:/^\+\d{6,15}$/'],
             'location' => ['nullable', 'string', 'max:225'],
             'department' => ['nullable', 'string', 'max:225'],
+            'group' => ['nullable', 'string', 'max:225'],
             'image' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:5048'],
+            'year_joined' => ['nullable', 'string' ]
         ];
     }
 }
