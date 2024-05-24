@@ -16,11 +16,14 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->string('first_name');
             $table->string('last_name')->nullable();
+            $table->string('gender')->nullable();
             $table->string('contact_1')->nullable()->unique();
             $table->string('contact_2')->nullable()->unique();
             $table->string('location')->nullable();
             $table->string('department')->nullable();
+            $table->string('group')->nullable();
             $table->string('image')->nullable();
+            $table->string('year_joined')->nullable();
             $table->timestamps();
         });
     }
