@@ -31,4 +31,8 @@ return [
         ],
     ],
 
+    'browsershot' => [
+        'include_path' => env('BROWSERSHOT_INCLUDE_PATH', 'C:\\Program Files\\nodejs'), // Default value if env not set
+    ],
+
 ];
