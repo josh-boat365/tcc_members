@@ -36,35 +36,24 @@
             </div>
         @endforeach
 
-        @if (session('success'))
-            <div id="alert-1"
-                class="flex items-center p-4 mt-4 mb-4 text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400"
-                role="alert">
-                <svg class="flex-shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                        d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
-                </svg>
-                <span class="sr-only">Info</span>
-                <div class="ms-3 text-sm font-medium">
-                    {{ session('success') }}
-                    <a href="{{ route('download.members.pdf') }}">Download PDF</a>
-                </div>
-                <button type="button"
-                    class="ms-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-400 p-1.5 hover:bg-green-200 inline-flex items-center justify-center h-8 w-8 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-gray-700"
-                    data-dismiss-target="#alert-1" aria-label="Close">
-                    <span class="sr-only">Close</span>
-                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 14 14">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                    </svg>
-                </button>
-            </div>
-        @endif
+
     </div>
 
+<div class="max-max-[45rem] mx-auto sm:px-6 lg:px-8 mt-6">
+    <div class=" w-fit mx-auto">
+        <span class="bg-indigo-500 text-purple-100 text-sm font-medium me-2 px-2.5 p-1 rounded ">Total Member(s) {{ $data[0]  }}</span>
+    <span class="bg-orange-500 text-purple-100 text-sm font-medium me-2 px-2.5 p-1 rounded ">Male(s) {{ $data[1]  }}</span>
+    <span class="bg-blue-500 text-purple-100 text-sm font-medium me-2 px-2.5 p-1 rounded ">Female(s) {{ $data[2]  }}</span>
+    </div>
 
+    <div class="w-fit mx-auto mt-5">
+        <span class="bg-red-500 text-purple-100 text-sm font-medium me-2 px-2.5 p-1 rounded ">Abraham Group {{ $data[5]  }}</span>
+        <span class="bg-green-500 text-purple-100 text-sm font-medium me-2 px-2.5 p-1 rounded ">Moses Group {{ $data[6]  }}</span>
+        <span class="bg-yellow-400 text-purple-100 text-sm font-medium me-2 px-2.5 p-1 rounded ">Joshua Group {{ $data[4]  }}</span>
+        <span class="bg-purple-500 text-purple-100 text-sm font-medium me-2 px-2.5 p-1 rounded ">David Group {{ $data[3]  }}</span>
+
+    </div>
+</div>
 
 
 
@@ -300,11 +289,11 @@
                                 <ul class="py-2 text-sm text-gray-700 dark:text-gray-200"
                                     aria-labelledby="dropdownDefaultButton">
                                     <li>
-                                        <a href="{{ route('export-pdf') }}" 
+                                        <a href="{{ route('export-pdf') }}"
                                             class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">PDF</a>
                                     </li>
                                     <li>
-                                        <a href="#"
+                                        <a href="{{ route('export-excel') }}"
                                             class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Excel</a>
                                     </li>
                                 </ul>
@@ -316,11 +305,7 @@
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
                                 <th scope="col" class="p-4">
-                                    <div class="flex items-center">
-                                        <input id="checkbox-all-search" type="checkbox"
-                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                                        <label for="checkbox-all-search" class="sr-only">checkbox</label>
-                                    </div>
+                                    <b>#</b>
                                 </th>
                                 <th scope="col" class="px-6 py-3">
                                     Name
@@ -352,15 +337,11 @@
                             </tr>
                         </thead>
                         <tbody id="member-table-body">
-                            @forelse ($members as $member)
+                            @forelse ($members as $index => $member)
                                 <tr
                                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     <td class="w-4 p-4">
-                                        <div class="flex items-center">
-                                            <input id="checkbox-table-search-1" type="checkbox"
-                                                class="w-8 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                                            <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
-                                        </div>
+                                        {{ $member->id }}
                                     </td>
                                     <th scope="row"
                                         class="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">

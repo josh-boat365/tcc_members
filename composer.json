@@ -10,6 +10,7 @@
         "intervention/image": "^3.6",
         "laravel/framework": "^11.0",
         "laravel/tinker": "^2.9",
+        "maatwebsite/excel": "^3.1",
         "spatie/browsershot": "^4.0",
         "spatie/laravel-pdf": "^1.5"
     },

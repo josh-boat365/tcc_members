@@ -1,20 +1,30 @@
 <?php
 
+
+
 namespace App\Http\Controllers\Auth;
 
 use Exception;
+use Carbon\Carbon;
 use App\Models\Member;
-use App\Services\PdfWrapper;
 
+use App\Services\PdfWrapper;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\PDF;
 // use App\Jobs\GenerateMembersPdf;
+use App\Exports\MembersExport;
+use Barryvdh\DomPDF\Facade\PDF;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\File;
 use Intervention\Image\ImageManager;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Http\Requests\CreateMemberRequest;
 use App\Http\Requests\UpdateMemberRequest;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
 
 class MemberController extends Controller
@@ -26,8 +36,20 @@ class MemberController extends Controller
     {
 
         $members = Member::latest()->paginate(25);
+        // $members = Member::orderBy('last_name','asc')->latest()->paginate(25);
 
-        return view('dashboard', compact('members'));
+        $total = Member::all()->count();
+        $male = Member::where('gender', 'Male')->count();
+        $female = Member::where('gender', 'Female')->count();
+        $david = Member::where('group', 'David')->count();
+        $joshua = Member::where('group', 'Joshua')->count();
+        $abraham = Member::where('group', 'Abraham')->count();
+        $moses = Member::where('group', 'Moses')->count();
+
+        $data = [$total, $male, $female, $david, $joshua, $abraham, $moses];
+
+
+        return view('dashboard', compact('members', 'data'));
     }
 
     public function search(Request $request)
@@ -51,7 +73,7 @@ class MemberController extends Controller
 
             // dd($validated);
 
-            $memberCode = 'tcc' . $this->generateMemberCode();
+            $memberCode = 'TCC' . $this->generateMemberCode();
 
             if ($request->hasFile('image')) {
 
@@ -111,19 +133,20 @@ class MemberController extends Controller
 
             // Check if a new image has been uploaded
             if ($request->hasFile('image')) {
-                $imageManger = new ImageManager(new Driver());
+                $imageManager = new ImageManager(new Driver());
                 $imageFile = $request->file('image');
                 $filename = $validated['first_name'] . '_' . $member->code . '.' . $imageFile->getClientOriginalExtension();
-                $image = $imageManger->read($imageFile);
-                $compressedImage = $image->resize(400, 400)->toJpeg(80); // Adjust the quality as needed
+                $image = $imageManager->read($imageFile);
+                $compressedImage = $image->resize(400, 400)->toJpeg(60); // Adjust the quality as needed
 
-                // Save the compressed image
+                // Save the compressed image to the public path
                 $newImagePath = 'images/members/' . $filename;
                 Storage::disk('public')->put($newImagePath, $compressedImage->__toString());
 
+
                 // Delete the old image if it exists
-                if ($member->image && Storage::disk('public')->exists($member->image)) {
-                    Storage::disk('public')->delete($member->image);
+                if ($member->image && File::exists(public_path($member->image))) {
+                    File::delete(public_path($member->image));
                 }
 
                 // Update the member with the new image path
@@ -173,7 +196,7 @@ class MemberController extends Controller
         try {
             $pdf->loadView('pdf.members', [
                 'members' => $members,
-            ])->save(public_path('images/sample2.pdf'));
+            ])->save(public_path('pdfs/sample1.pdf'));
 
             return redirect()->back()->with('success', 'PDF generated successfully.');
         } catch (\Exception $e) {
@@ -181,6 +204,106 @@ class MemberController extends Controller
 
         }
     }
+
+    // public function exportPDF()
+    // {
+    //     $members = Member::all();
+    //     $pdf = new PdfWrapper();
+
+    //     // Define the temporary directory path
+    //     $tempDir = sys_get_temp_dir() . '/puppeteer_temp';
+
+    //     // Ensure the temporary directory exists
+    //     if (!file_exists($tempDir)) {
+    //         mkdir($tempDir, 0777, true);
+    //     }
+
+    //     // Set the TMPDIR environment variable
+    //     putenv('TMPDIR=' . $tempDir);
+
+    //     try {
+    //         $pdf->loadView('pdf.members', [
+    //             'members' => $members,
+    //         ])->save(public_path('pdfs/sample1.pdf'));
+
+    //         return redirect()->back()->with('success', 'PDF generated successfully.');
+    //     } catch (\Exception $e) {
+    //         return redirect()->back()->with('error', 'Error generating PDF: ' . $e->getMessage());
+    //     }
+    // }
+
+    public function exportExcel()
+    {
+        return Excel::download(new MembersExport, 'tcc_members.xlsx');
+    }
+
+
+
+    public function downloadExcel()
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Set header values
+        $headers = ['Image', 'Full Name', 'Member ID', 'Gender', 'Contact', 'Location', 'Department', 'Group', 'Year Joined'];
+        foreach ($headers as $index => $header) {
+            $sheet->setCellValueByColumnAndRow($index + 1, 1, strtoupper($header));
+            $sheet->getStyleByColumnAndRow($index + 1, 1)->getFont()->setBold(true);
+        }
+
+        // Retrieve members data
+        $members = Member::orderBy('first_name')->get();
+
+        foreach ($members as $rowIndex => $member) {
+            $row = $rowIndex + 2; // Data starts from the second row
+
+            // Add image
+            if ($member->image && Storage::disk('public')->exists($member->image)) {
+                $drawing = new Drawing();
+                $drawing->setName('Image');
+                $drawing->setDescription('Image');
+                $drawing->setPath(public_path('storage/' . $member->image));
+                $drawing->setHeight(100); // Adjust height to fit the cell
+                $drawing->setWidth(100); // Adjust width to fit the cell
+                $drawing->setCoordinates('A' . $row); // 'A' column for image
+                $drawing->setWorksheet($sheet);
+            }
+
+            // Add member details
+            $sheet->setCellValue('B' . $row, $member->first_name . ' ' . $member->last_name);
+            $sheet->setCellValue('C' . $row, $member->code);
+            $sheet->setCellValue('D' . $row, $member->gender);
+            $sheet->setCellValue('E' . $row, $member->contact_1 . ($member->contact_2 ? '/' . $member->contact_2 : ''));
+            $sheet->setCellValue('F' . $row, $member->location);
+            $sheet->setCellValue('G' . $row, $member->department);
+            $sheet->setCellValue('H' . $row, $member->group);
+            $sheet->setCellValue('I' . $row, $member->year_joined);
+
+            // Adjust row height to fit the image
+            $sheet->getRowDimension($row)->setRowHeight(100);
+        }
+
+        // Adjust column widths for better readability
+        $sheet->getColumnDimension('A')->setWidth(15); // Adjust the width as needed
+        for ($col = ord('B'); $col <= ord('I'); $col++) {
+            $sheet->getColumnDimension(chr($col))->setAutoSize(true);
+        }
+
+        // Set header styles
+        $sheet->getStyle('A1:I1')->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle('A1:I1')->getAlignment()->setHorizontal('center');
+
+        // Write the file and download
+        $writer = new Xlsx($spreadsheet);
+        $date = Carbon::now()->toDateTimeString();
+        $fileName = 'tcc-members-'.$date.'.xlsx';
+        $temp_file = tempnam(sys_get_temp_dir(), $fileName);
+        $writer->save($temp_file);
+
+        return response()->download($temp_file, $fileName)->deleteFileAfterSend(true);
+    }
+
+
 
 
     /**
@@ -224,11 +347,13 @@ class MemberController extends Controller
 
     public function generateMemberCode()
     {
-        do {
-            $uid = random_int(100, 999);
-        } while (Member::where('code', '=', $uid)->first());
+        return DB::transaction(function () {
+            do {
+                $uid = random_int(100000, 999999); // Using a 6-digit number to reduce collisions
+            } while (Member::where('code', '=', $uid)->exists());
 
-        return $uid;
+            return $uid;
+        });
     }
 
     protected function extractYear($date)
