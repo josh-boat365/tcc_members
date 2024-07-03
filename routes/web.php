@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/delete-member/{id}', [MemberController::class, 'destroy'])->name('delete-member');
     Route::get('/update-member/{id}', [MemberController::class, 'update'])->name('update-member');
     Route::get('/export-pdf', [MemberController::class, 'exportPDF'])->name('export-pdf');
+    Route::get('/export-excel', [MemberController::class, 'downloadExcel'])->name('export-excel');
 
     Route::get('/download-members-pdf', [MemberController::class, 'downloadPDF'])->name('download.members.pdf');
 
